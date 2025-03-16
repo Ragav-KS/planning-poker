@@ -1,0 +1,24 @@
+{
+  "name": "@planning-poker/infra",
+  "bin": {
+    "infra": "bin/infra.ts"
+  },
+  "scripts": {
+    "cdk": "cdk",
+    "lint": "eslint .",
+    "test": "vitest"
+  },
+  "dependencies": {
+    "aws-cdk-lib": "2.181.1",
+    "constructs": "^10.0.0"
+  },
+  "devDependencies": {
+    "@dotenvx/dotenvx": "1.38.5",
+    "@planning-poker/eslint-config": "workspace:*",
+    "@types/node": "22.7.9",
+    "aws-cdk": "2.1004.0",
+    "eslint": "^9.22.0",
+    "ts-node": "^10.9.2",
+    "vitest": "3.0.8"
+  }
+}

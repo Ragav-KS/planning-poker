@@ -1,0 +1,7 @@
+node_modules
+
+*.local
+
+# CDK asset staging directory
+.cdk.staging
+cdk.out
