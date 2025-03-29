@@ -1,0 +1,25 @@
+{
+  "name": "@planning-poker/backend-lambda",
+  "type": "module",
+  "main": "src/index.ts",
+  "scripts": {
+    "build": "vite build --mode production",
+    "server": "vite --mode production",
+    "lint": "eslint .",
+    "zip": "zip -j lambda.zip dist/index.js"
+  },
+  "dependencies": {
+    "hono": "^4.7.4"
+  },
+  "devDependencies": {
+    "@hono/vite-dev-server": "^0.19.0",
+    "@planning-poker/eslint-config": "workspace:*",
+    "@types/node": "^22.13.10",
+    "esbuild": "^0.21.4",
+    "eslint": "^9.22.0",
+    "npm-run-all2": "^6.2.0",
+    "typescript": "^5.8.2",
+    "vite": "^6.2.2",
+    "vitest": "^3.0.9"
+  }
+}
