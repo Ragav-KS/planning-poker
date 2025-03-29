@@ -1,0 +1,3 @@
+#set ($parsedBody = $util.parseJson($input.body))
+
+$parsedBody.body

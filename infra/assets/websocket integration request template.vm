@@ -1,0 +1,48 @@
+## Extract message body if available
+#set($body = $input.body)
+#if(!$body)
+  #set($body = '{}')
+#end
+
+## Determine HTTP method based on WebSocket routeKey
+#set($httpMethod = "POST")
+#if($context.routeKey == "$connect")
+  #set($httpMethod = "GET")
+#end
+#if($context.routeKey == "$disconnect")
+  #set($httpMethod = "DELETE")
+#end
+
+#set($parsedBody = $util.parseJson($body))
+#set($action = $parsedBody.action)
+
+## Construct transformed event JSON
+{
+  "resource": "\$default",
+  "path": "/websocket/default/$action",
+  "httpMethod": "$httpMethod",
+  "headers": {
+    "Content-Type": "application/json",
+    "X-WebSocket-Connection-Id": "$context.connectionId"
+  },
+  "queryStringParameters": null,
+  "pathParameters": null,
+  "stageVariables": {},
+  "requestContext": {
+    "resourcePath": "\$default",
+    "httpMethod": "$httpMethod",
+    "requestTime": "$context.requestTime",
+    "path": "/websocket/default/$action",
+    "protocol": "HTTP/1.1",
+    "stage": "$context.stage",
+    "requestTimeEpoch": $context.requestTimeEpoch,
+    "requestId": "$context.requestId",
+    "identity": {
+      "sourceIp": "$context.identity.sourceIp"
+    },
+    "domainName": "$context.domainName",
+    "apiId": "$context.apiId"
+  },
+  "body": $body,
+  "isBase64Encoded": false
+}

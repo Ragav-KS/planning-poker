@@ -1,18 +1,25 @@
 #!/usr/bin/env node
-import { config } from '@dotenvx/dotenvx';
 import { App } from 'aws-cdk-lib';
-import { InfraStack } from '../lib/infra-stack';
+import { BackendWebSocketApiStack } from '../stacks/BackendWebSocketApi-stack';
+import { loadAndVerifyEnv } from '../utils/loadEnv';
 
-config({ path: ['.env', '.env.local'], override: process.env.CI !== 'true' });
+const env = loadAndVerifyEnv();
 
-const defaultAccount = process.env.CDK_DEFAULT_ACCOUNT;
-const defaultRegion = process.env.CDK_DEFAULT_REGION;
+// CDK env variables
+const defaultAccount = env.CDK_DEFAULT_ACCOUNT;
+const defaultRegion = env.CDK_DEFAULT_REGION;
+
+// App specific env variables
+const webSocketDomainName = env.APP_WEBSOCKET_DOMAIN;
+const webSocketDomainCertArn = env.APP_WEBSOCKET_DOMAIN_CERTIFICATE_ARN;
 
 const app = new App();
 
-new InfraStack(app, 'InfraStack', {
+new BackendWebSocketApiStack(app, 'BackendWebSocketApiStack', {
   env: {
     account: defaultAccount,
     region: defaultRegion,
   },
+  webSocketDomainName: webSocketDomainName,
+  webSocketDomainCertificate: webSocketDomainCertArn,
 });
