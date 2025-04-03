@@ -1,17 +1,30 @@
 import { Hono } from 'hono';
 import { handle } from 'hono/aws-lambda';
 
-const app = new Hono();
-
 const webSocketDefaultRoute = new Hono();
 
-webSocketDefaultRoute.post('/:path', async (c) => {
+webSocketDefaultRoute.post('/create-room', async (c) => {
   return c.json({
-    route: '$default',
-    path: c.req.param('path'),
+    message: 'Room created',
   });
 });
 
-app.route('/websocket/default', webSocketDefaultRoute);
+const websocketRoute = new Hono();
+
+websocketRoute
+  .get('/connect', async (c) => {
+    console.log('Connect route called');
+    return c.status(200);
+  })
+  .delete('/connect', async (c) => {
+    console.log('Disconnect route called');
+    return c.status(200);
+  });
+
+websocketRoute.route('/default', webSocketDefaultRoute);
+
+export const app = new Hono();
+
+app.route('/websocket', websocketRoute);
 
 export const handler = handle(app);

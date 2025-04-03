@@ -1,5 +1,4 @@
 /// <reference types="vitest" />
-import devServer from '@hono/vite-dev-server';
 import { builtinModules } from 'module';
 import { resolve } from 'path';
 import { defineConfig, UserConfig } from 'vite';
@@ -26,16 +25,5 @@ export default defineConfig(() => {
         formats: ['es'],
       },
     },
-    server: {
-      host: '127.0.0.1',
-      port: 3000,
-      strictPort: true,
-    },
-    plugins: [
-      devServer({
-        export: 'app',
-        entry: 'src/index.ts',
-      }),
-    ],
   } satisfies UserConfig;
 });
