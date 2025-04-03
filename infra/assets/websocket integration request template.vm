@@ -4,22 +4,27 @@
   #set($body = '{}')
 #end
 
-## Determine HTTP method based on WebSocket routeKey
-#set($httpMethod = "POST")
-#if($context.routeKey == "$connect")
-  #set($httpMethod = "GET")
-#end
-#if($context.routeKey == "$disconnect")
-  #set($httpMethod = "DELETE")
-#end
-
 #set($parsedBody = $util.parseJson($body))
 #set($action = $parsedBody.action)
 
+## Determine HTTP method based on WebSocket routeKey
+#if($context.routeKey == "\$default")
+  #set($path = "/websocket/default/$action")
+  #set($httpMethod = "POST")
+#end
+#if($context.routeKey == "\$connect")
+  #set($path = "/websocket/connect")
+  #set($httpMethod = "GET")
+#end
+#if($context.routeKey == "\$disconnect")
+  #set($path = "/websocket/connect")
+  #set($httpMethod = "DELETE")
+#end
+
 ## Construct transformed event JSON
 {
-  "resource": "\$default",
-  "path": "/websocket/default/$action",
+  "resource": "$context.routeKey",
+  "path": "$path",
   "httpMethod": "$httpMethod",
   "headers": {
     "Content-Type": "application/json",
@@ -29,10 +34,10 @@
   "pathParameters": null,
   "stageVariables": {},
   "requestContext": {
-    "resourcePath": "\$default",
+    "resourcePath": "$context.routeKey",
     "httpMethod": "$httpMethod",
     "requestTime": "$context.requestTime",
-    "path": "/websocket/default/$action",
+    "path": "$path",
     "protocol": "HTTP/1.1",
     "stage": "$context.stage",
     "requestTimeEpoch": $context.requestTimeEpoch,
@@ -43,6 +48,6 @@
     "domainName": "$context.domainName",
     "apiId": "$context.apiId"
   },
-  "body": $body,
+  "body": $input.json('$.data'),
   "isBase64Encoded": false
 }
