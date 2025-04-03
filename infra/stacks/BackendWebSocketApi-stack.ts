@@ -34,10 +34,6 @@ export class BackendWebSocketApiStack extends Stack {
 
     const { webSocketDomainName, webSocketDomainCertificate } = props;
 
-    const placeholderCode = readFileSync(
-      resolve(__dirname, '../assets/placeholderLambdaCode.js'),
-    ).toString('utf-8');
-
     const importedCertificate = Certificate.fromCertificateArn(
       this,
       'PlanningPokerImportedWebSocketCertificateArn',
@@ -45,6 +41,12 @@ export class BackendWebSocketApiStack extends Stack {
     );
 
     const account = this.configureCloudWatchRole(this);
+
+    // Lambda function
+
+    const placeholderCode = readFileSync(
+      resolve(__dirname, '../assets/placeholderLambdaCode.js'),
+    ).toString('utf-8');
 
     const lambdaFn = new Function(this, 'PlanningPokerFn', {
       runtime: Runtime.NODEJS_22_X,
@@ -57,6 +59,8 @@ export class BackendWebSocketApiStack extends Stack {
       version: lambdaFn.latestVersion,
     });
 
+    // WebSocket API
+
     const webSocketApi = new WebSocketApi(this, 'PlanningPokerWebSocketApi', {
       apiName: 'PlanningPokerWebSocket',
       routeSelectionExpression: '$request.body.action',
@@ -66,7 +70,74 @@ export class BackendWebSocketApiStack extends Stack {
       resolve(__dirname, '../assets/websocket integration request template.vm'),
     ).toString('utf-8');
 
-    const webSocketRequestIntegration = new CfnIntegration(
+    const responseTemplate = readFileSync(
+      resolve(
+        __dirname,
+        '../assets/websocket integration response template.vm',
+      ),
+    ).toString('utf-8');
+
+    // $connect route
+
+    const webSocketConnectRouteRequestIntegration = new CfnIntegration(
+      this,
+      'PlanningPokerWebSocketApiConnectRouteIntegration',
+      {
+        apiId: webSocketApi.apiId,
+        integrationType: 'AWS',
+        integrationUri: `arn:aws:apigateway:${this.region}:lambda:path/2015-03-31/functions/${lambdaFnAlias.functionArn}/invocations`,
+        templateSelectionExpression: '\\$connect',
+        requestTemplates: {
+          $default: requestTemplate,
+        },
+      },
+    );
+
+    new CfnIntegrationResponse(
+      this,
+      'PlanningPokerWebSocketConnectRouteIntegrationResponse',
+      {
+        apiId: webSocketApi.apiId,
+        integrationId: webSocketConnectRouteRequestIntegration.ref,
+        integrationResponseKey: '$default',
+        templateSelectionExpression: '$integration.response.statuscode',
+        responseTemplates: {
+          '200': '{}',
+        },
+      },
+    );
+
+    const webSocketConnectRoute = new CfnRoute(
+      this,
+      'PlanningPokerWebSocketConnectRoute',
+      {
+        apiId: webSocketApi.apiId,
+        routeKey: '$connect',
+        target: `integrations/${webSocketConnectRouteRequestIntegration.ref}`,
+      },
+    );
+
+    lambdaFnAlias.addPermission(
+      'PlanningPokerWebSocketApiConnectRoutePermission',
+      {
+        principal: new ServicePrincipal('apigateway.amazonaws.com'),
+        sourceArn: webSocketApi.arnForExecuteApiV2('$connect', 'prod'),
+      },
+    );
+
+    new CfnRouteResponse(
+      this,
+      'PlanningPokerWebSocketApiConnectRouteResponse',
+      {
+        apiId: webSocketApi.apiId,
+        routeId: webSocketConnectRoute.ref,
+        routeResponseKey: '$default',
+      },
+    );
+
+    // $default route
+
+    const webSocketDefaultRouteRequestIntegration = new CfnIntegration(
       this,
       'PlanningPokerWebSocketApiDefaultRouteIntegration',
       {
@@ -80,19 +151,12 @@ export class BackendWebSocketApiStack extends Stack {
       },
     );
 
-    const responseTemplate = readFileSync(
-      resolve(
-        __dirname,
-        '../assets/websocket integration response template.vm',
-      ),
-    ).toString('utf-8');
-
     new CfnIntegrationResponse(
       this,
       'PlanningPokerWebSocketDefaultRouteIntegrationResponse',
       {
         apiId: webSocketApi.apiId,
-        integrationId: webSocketRequestIntegration.ref,
+        integrationId: webSocketDefaultRouteRequestIntegration.ref,
         integrationResponseKey: '$default',
         templateSelectionExpression: '$integration.response.statuscode',
         responseTemplates: {
@@ -108,11 +172,9 @@ export class BackendWebSocketApiStack extends Stack {
         apiId: webSocketApi.apiId,
         routeKey: '$default',
         routeResponseSelectionExpression: '$default',
-        target: `integrations/${webSocketRequestIntegration.ref}`,
+        target: `integrations/${webSocketDefaultRouteRequestIntegration.ref}`,
       },
     );
-
-    webSocketApi.arnForExecuteApiV2('$default', 'prod');
 
     lambdaFnAlias.addPermission(
       'PlanningPokerWebSocketApiDefaultRoutePermission',
@@ -133,6 +195,8 @@ export class BackendWebSocketApiStack extends Stack {
     );
 
     webSocketApi.node.addDependency(account);
+
+    // Stage + Domain mapping
 
     const domainName = new DomainName(
       this,
