@@ -14,7 +14,7 @@
         "AWS_ENDPOINT_URL_DYNAMODB": "http://localhost:8000"
       },
       "runtimeExecutable": "pnpm",
-      "runtimeArgs": ["--filter", "@planning-poker/backend-lambda", "dev"]
+      "runtimeArgs": ["--filter", "@planning-poker/backend", "dev"]
     }
   ]
 }
