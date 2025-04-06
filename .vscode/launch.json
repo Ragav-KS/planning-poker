@@ -1,0 +1,20 @@
+{
+  // Use IntelliSense to learn about possible attributes.
+  // Hover to view descriptions of existing attributes.
+  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Launch Backend",
+      "type": "node",
+      "request": "launch",
+      "cwd": "${workspaceRoot}",
+      "env": {
+        "AWS_PROFILE": "local",
+        "AWS_ENDPOINT_URL_DYNAMODB": "http://localhost:8000"
+      },
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--filter", "@planning-poker/backend-lambda", "dev"]
+    }
+  ]
+}
