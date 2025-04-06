@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import { App } from 'aws-cdk-lib';
 import { BackendWebSocketApiStack } from '../stacks/BackendWebSocketApi-stack';
+import { DatabaseStack } from '../stacks/Database-stack';
 import { loadAndVerifyEnv } from '../utils/loadEnv';
 
 const env = loadAndVerifyEnv();
@@ -15,6 +16,13 @@ const webSocketDomainCertArn = env.APP_WEBSOCKET_DOMAIN_CERTIFICATE_ARN;
 
 const app = new App();
 
+const databaseStack = new DatabaseStack(app, 'DatabaseStack', {
+  env: {
+    account: defaultAccount,
+    region: defaultRegion,
+  },
+});
+
 new BackendWebSocketApiStack(app, 'BackendWebSocketApiStack', {
   env: {
     account: defaultAccount,
@@ -22,4 +30,7 @@ new BackendWebSocketApiStack(app, 'BackendWebSocketApiStack', {
   },
   webSocketDomainName: webSocketDomainName,
   webSocketDomainCertificate: webSocketDomainCertArn,
+  tables: {
+    roomsTable: databaseStack.roomsTable,
+  },
 });

@@ -3,6 +3,7 @@ import { Template } from 'aws-cdk-lib/assertions';
 import { beforeAll, describe, expect, test } from 'vitest';
 import { loadAndVerifyEnv } from '../utils/loadEnv';
 import { BackendWebSocketApiStack } from './BackendWebSocketApi-stack';
+import { DatabaseStack } from './DataBase-stack';
 
 describe('Sample test for Infra Stack', () => {
   let template: Template;
@@ -11,6 +12,13 @@ describe('Sample test for Infra Stack', () => {
     const env = loadAndVerifyEnv(['.env']);
 
     const app = new App();
+
+    const databaseStack = new DatabaseStack(app, 'DatabaseStack', {
+      env: {
+        region: env.CDK_DEFAULT_REGION,
+        account: env.CDK_DEFAULT_ACCOUNT,
+      },
+    });
 
     const stack = new BackendWebSocketApiStack(
       app,
@@ -22,6 +30,9 @@ describe('Sample test for Infra Stack', () => {
         },
         webSocketDomainName: env.APP_WEBSOCKET_DOMAIN,
         webSocketDomainCertificate: env.APP_WEBSOCKET_DOMAIN_CERTIFICATE_ARN,
+        tables: {
+          roomsTable: databaseStack.roomsTable,
+        },
       },
     );
 

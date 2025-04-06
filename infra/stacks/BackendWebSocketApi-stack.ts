@@ -12,8 +12,15 @@ import {
   type CfnStage,
 } from 'aws-cdk-lib/aws-apigatewayv2';
 import { Certificate } from 'aws-cdk-lib/aws-certificatemanager';
+import type { Table } from 'aws-cdk-lib/aws-dynamodb';
 import { ManagedPolicy, Role, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
-import { Alias, Code, Function, Runtime } from 'aws-cdk-lib/aws-lambda';
+import {
+  Alias,
+  Code,
+  Function,
+  Runtime,
+  Tracing,
+} from 'aws-cdk-lib/aws-lambda';
 import { LogGroup, RetentionDays } from 'aws-cdk-lib/aws-logs';
 import { Construct } from 'constructs';
 import { readFileSync } from 'fs';
@@ -22,6 +29,9 @@ import { resolve } from 'path';
 interface BackendWebSocketApiStackProps extends StackProps {
   webSocketDomainName: string;
   webSocketDomainCertificate: string;
+  tables: {
+    roomsTable: Table;
+  };
 }
 
 export class BackendWebSocketApiStack extends Stack {
@@ -32,7 +42,11 @@ export class BackendWebSocketApiStack extends Stack {
   ) {
     super(scope, id, props);
 
-    const { webSocketDomainName, webSocketDomainCertificate } = props;
+    const {
+      webSocketDomainName,
+      webSocketDomainCertificate,
+      tables: { roomsTable },
+    } = props;
 
     const importedCertificate = Certificate.fromCertificateArn(
       this,
@@ -52,12 +66,15 @@ export class BackendWebSocketApiStack extends Stack {
       runtime: Runtime.NODEJS_22_X,
       handler: 'index.handler',
       code: Code.fromInline(placeholderCode),
+      tracing: Tracing.ACTIVE,
     });
 
     const lambdaFnAlias = new Alias(this, 'PlanningPokerFnAlias', {
       aliasName: 'prod',
       version: lambdaFn.latestVersion,
     });
+
+    roomsTable.grantReadWriteData(lambdaFnAlias);
 
     // WebSocket API
 
