@@ -9,6 +9,8 @@ const { injectWebSocket, upgradeWebSocket } = createNodeWebSocket({
   app: localApp,
 });
 
+localApp.route('/', app);
+
 localApp.get(
   '/',
   upgradeWebSocket(() => {
