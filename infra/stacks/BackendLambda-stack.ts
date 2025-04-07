@@ -7,7 +7,7 @@ import {
   Runtime,
   Tracing,
 } from 'aws-cdk-lib/aws-lambda';
-import { RetentionDays } from 'aws-cdk-lib/aws-logs';
+import { LogGroup, RetentionDays } from 'aws-cdk-lib/aws-logs';
 import type { Construct } from 'constructs';
 import { readFileSync } from 'fs';
 import { resolve } from 'path';
@@ -36,7 +36,10 @@ export class BackendLambdaStack extends Stack {
       runtime: Runtime.NODEJS_22_X,
       handler: 'index.handler',
       code: Code.fromInline(placeholderCode),
-      logRetention: RetentionDays.THREE_MONTHS,
+      logGroup: new LogGroup(this, 'PokerRestApiAccessLogs', {
+        logGroupName: 'PokerLambdaFnLogs',
+        retention: RetentionDays.THREE_MONTHS,
+      }),
       tracing: Tracing.ACTIVE,
     });
 
