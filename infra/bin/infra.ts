@@ -1,7 +1,10 @@
 #!/usr/bin/env node
 import { App } from 'aws-cdk-lib';
-import { BackendWebSocketApiStack } from '../stacks/BackendWebSocketApi-stack';
+import { BackendLambdaStack } from '../stacks/BackendLambda-stack';
+import { CloudWatchRoleStack } from '../stacks/CloudWatchRole-stack';
 import { DatabaseStack } from '../stacks/Database-stack';
+import { RestApiStack } from '../stacks/RestApiStack-stack';
+import { WebSocketApiStack } from '../stacks/WebSocketApiStack-stack';
 import { loadAndVerifyEnv } from '../utils/loadEnv';
 
 const env = loadAndVerifyEnv();
@@ -11,26 +14,66 @@ const defaultAccount = env.CDK_DEFAULT_ACCOUNT;
 const defaultRegion = env.CDK_DEFAULT_REGION;
 
 // App specific env variables
+const appDomainCertArn = env.APP_DOMAIN_CERTIFICATE_ARN;
+const restApiDomainName = env.APP_RESTAPI_DOMAIN;
 const webSocketDomainName = env.APP_WEBSOCKET_DOMAIN;
-const webSocketDomainCertArn = env.APP_WEBSOCKET_DOMAIN_CERTIFICATE_ARN;
 
 const app = new App();
 
-const databaseStack = new DatabaseStack(app, 'DatabaseStack', {
+const cloudWatchConfigStack = new CloudWatchRoleStack(
+  app,
+  'Poker-CloudWatchRoleStack',
+  {
+    env: {
+      account: defaultAccount,
+      region: defaultRegion,
+    },
+  },
+);
+
+const databaseStack = new DatabaseStack(app, 'Poker-DatabaseStack', {
   env: {
     account: defaultAccount,
     region: defaultRegion,
   },
 });
 
-new BackendWebSocketApiStack(app, 'BackendWebSocketApiStack', {
+const backendLambdaStack = new BackendLambdaStack(
+  app,
+  'Poker-BackendLambdaStack',
+  {
+    env: {
+      account: defaultAccount,
+      region: defaultRegion,
+    },
+    tables: {
+      roomsTable: databaseStack.roomsTable,
+    },
+  },
+);
+
+const httpApiStack = new RestApiStack(app, 'Poker-RestApiStack', {
   env: {
     account: defaultAccount,
     region: defaultRegion,
   },
-  webSocketDomainName: webSocketDomainName,
-  webSocketDomainCertificate: webSocketDomainCertArn,
-  tables: {
-    roomsTable: databaseStack.roomsTable,
-  },
+  lambdaFnAliasArn: backendLambdaStack.lambdaFnAlias.functionArn,
+  restApiDomainName: restApiDomainName,
+  restApiDomainCertificate: appDomainCertArn,
 });
+httpApiStack.addDependency(cloudWatchConfigStack);
+
+const webSocketApiStack = new WebSocketApiStack(
+  app,
+  'Poker-WebSocketApiStack',
+  {
+    env: {
+      account: defaultAccount,
+      region: defaultRegion,
+    },
+    webSocketDomainName: webSocketDomainName,
+    webSocketDomainCertificate: appDomainCertArn,
+    lambdaFnAliasArn: backendLambdaStack.lambdaFnAlias.functionArn,
+  },
+);
+webSocketApiStack.addDependency(cloudWatchConfigStack);

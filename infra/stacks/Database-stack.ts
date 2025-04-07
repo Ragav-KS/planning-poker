@@ -8,7 +8,7 @@ export class DatabaseStack extends Stack {
   constructor(scope: Construct, id: string, props: StackProps) {
     super(scope, id, props);
 
-    this.roomsTable = new Table(this, 'PlanningPokerRoomsTable', {
+    this.roomsTable = new Table(this, 'PokerRoomsTable', {
       tableName: 'rooms',
       partitionKey: {
         name: 'roomId',

@@ -5,8 +5,9 @@ const envVariablesToCheck = [
   'CDK_DEFAULT_ACCOUNT',
   'CDK_DEFAULT_REGION',
   // App specific env variables
+  'APP_DOMAIN_CERTIFICATE_ARN',
   'APP_WEBSOCKET_DOMAIN',
-  'APP_WEBSOCKET_DOMAIN_CERTIFICATE_ARN',
+  'APP_RESTAPI_DOMAIN'
 ] as const;
 
 export function loadAndVerifyEnv(

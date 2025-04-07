@@ -1,5 +1,4 @@
 import { Stack, StackProps } from 'aws-cdk-lib';
-import { CfnAccount } from 'aws-cdk-lib/aws-apigateway';
 import {
   CfnIntegration,
   CfnIntegrationResponse,
@@ -12,74 +11,45 @@ import {
   type CfnStage,
 } from 'aws-cdk-lib/aws-apigatewayv2';
 import { Certificate } from 'aws-cdk-lib/aws-certificatemanager';
-import type { Table } from 'aws-cdk-lib/aws-dynamodb';
-import { ManagedPolicy, Role, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
-import {
-  Alias,
-  Code,
-  Function,
-  Runtime,
-  Tracing,
-} from 'aws-cdk-lib/aws-lambda';
+import { ServicePrincipal } from 'aws-cdk-lib/aws-iam';
+import { Function } from 'aws-cdk-lib/aws-lambda';
 import { LogGroup, RetentionDays } from 'aws-cdk-lib/aws-logs';
 import { Construct } from 'constructs';
 import { readFileSync } from 'fs';
 import { resolve } from 'path';
 
-interface BackendWebSocketApiStackProps extends StackProps {
+interface WebSocketApiStackProps extends StackProps {
   webSocketDomainName: string;
   webSocketDomainCertificate: string;
-  tables: {
-    roomsTable: Table;
-  };
+  lambdaFnAliasArn: string;
 }
 
-export class BackendWebSocketApiStack extends Stack {
-  constructor(
-    scope: Construct,
-    id: string,
-    props: BackendWebSocketApiStackProps,
-  ) {
+export class WebSocketApiStack extends Stack {
+  constructor(scope: Construct, id: string, props: WebSocketApiStackProps) {
     super(scope, id, props);
 
     const {
       webSocketDomainName,
       webSocketDomainCertificate,
-      tables: { roomsTable },
+      lambdaFnAliasArn,
     } = props;
 
     const importedCertificate = Certificate.fromCertificateArn(
       this,
-      'PlanningPokerImportedWebSocketCertificateArn',
+      'PokerImportedDomainCertificateArn',
       webSocketDomainCertificate,
     );
 
-    const account = this.configureCloudWatchRole(this);
-
-    // Lambda function
-
-    const placeholderCode = readFileSync(
-      resolve(__dirname, '../assets/placeholderLambdaCode.js'),
-    ).toString('utf-8');
-
-    const lambdaFn = new Function(this, 'PlanningPokerFn', {
-      runtime: Runtime.NODEJS_22_X,
-      handler: 'index.handler',
-      code: Code.fromInline(placeholderCode),
-      tracing: Tracing.ACTIVE,
-    });
-
-    const lambdaFnAlias = new Alias(this, 'PlanningPokerFnAlias', {
-      aliasName: 'prod',
-      version: lambdaFn.latestVersion,
-    });
-
-    roomsTable.grantReadWriteData(lambdaFnAlias);
+    const lambdaFnAlias = Function.fromFunctionAttributes(
+      this,
+      'ImportedLambdaAlias',
+      { functionArn: lambdaFnAliasArn, sameEnvironment: true },
+    );
 
     // WebSocket API
 
-    const webSocketApi = new WebSocketApi(this, 'PlanningPokerWebSocketApi', {
-      apiName: 'PlanningPokerWebSocket',
+    const webSocketApi = new WebSocketApi(this, 'PokerWebSocket', {
+      apiName: 'PokerWebSocket',
       routeSelectionExpression: '$request.body.action',
     });
 
@@ -98,7 +68,7 @@ export class BackendWebSocketApiStack extends Stack {
 
     const webSocketConnectRouteRequestIntegration = new CfnIntegration(
       this,
-      'PlanningPokerWebSocketApiConnectRouteIntegration',
+      'PokerWebSocketConnectRouteIntegration',
       {
         apiId: webSocketApi.apiId,
         integrationType: 'AWS',
@@ -112,7 +82,7 @@ export class BackendWebSocketApiStack extends Stack {
 
     new CfnIntegrationResponse(
       this,
-      'PlanningPokerWebSocketConnectRouteIntegrationResponse',
+      'PokerWebSocketConnectRouteIntegrationResponse',
       {
         apiId: webSocketApi.apiId,
         integrationId: webSocketConnectRouteRequestIntegration.ref,
@@ -126,7 +96,7 @@ export class BackendWebSocketApiStack extends Stack {
 
     const webSocketConnectRoute = new CfnRoute(
       this,
-      'PlanningPokerWebSocketConnectRoute',
+      'PokerWebSocketConnectRoute',
       {
         apiId: webSocketApi.apiId,
         routeKey: '$connect',
@@ -134,29 +104,22 @@ export class BackendWebSocketApiStack extends Stack {
       },
     );
 
-    lambdaFnAlias.addPermission(
-      'PlanningPokerWebSocketApiConnectRoutePermission',
-      {
-        principal: new ServicePrincipal('apigateway.amazonaws.com'),
-        sourceArn: webSocketApi.arnForExecuteApiV2('$connect', 'prod'),
-      },
-    );
+    lambdaFnAlias.addPermission('PokerWebSocketConnectRoutePermission', {
+      principal: new ServicePrincipal('apigateway.amazonaws.com'),
+      sourceArn: webSocketApi.arnForExecuteApiV2('$connect', 'prod'),
+    });
 
-    new CfnRouteResponse(
-      this,
-      'PlanningPokerWebSocketApiConnectRouteResponse',
-      {
-        apiId: webSocketApi.apiId,
-        routeId: webSocketConnectRoute.ref,
-        routeResponseKey: '$default',
-      },
-    );
+    new CfnRouteResponse(this, 'PokerWebSocketConnectRouteResponse', {
+      apiId: webSocketApi.apiId,
+      routeId: webSocketConnectRoute.ref,
+      routeResponseKey: '$default',
+    });
 
     // $default route
 
     const webSocketDefaultRouteRequestIntegration = new CfnIntegration(
       this,
-      'PlanningPokerWebSocketApiDefaultRouteIntegration',
+      'PokerWebSocketDefaultRouteIntegration',
       {
         apiId: webSocketApi.apiId,
         integrationType: 'AWS',
@@ -170,7 +133,7 @@ export class BackendWebSocketApiStack extends Stack {
 
     new CfnIntegrationResponse(
       this,
-      'PlanningPokerWebSocketDefaultRouteIntegrationResponse',
+      'PokerWebSocketDefaultRouteIntegrationResponse',
       {
         apiId: webSocketApi.apiId,
         integrationId: webSocketDefaultRouteRequestIntegration.ref,
@@ -184,7 +147,7 @@ export class BackendWebSocketApiStack extends Stack {
 
     const webSocketDefaultRoute = new CfnRoute(
       this,
-      'PlanningPokerWebSocketDefaultRoute',
+      'PokerWebSocketDefaultRoute',
       {
         apiId: webSocketApi.apiId,
         routeKey: '$default',
@@ -193,52 +156,35 @@ export class BackendWebSocketApiStack extends Stack {
       },
     );
 
-    lambdaFnAlias.addPermission(
-      'PlanningPokerWebSocketApiDefaultRoutePermission',
-      {
-        principal: new ServicePrincipal('apigateway.amazonaws.com'),
-        sourceArn: webSocketApi.arnForExecuteApiV2('$default', 'prod'),
-      },
-    );
+    lambdaFnAlias.addPermission('PokerWebSocketDefaultRoutePermission', {
+      principal: new ServicePrincipal('apigateway.amazonaws.com'),
+      sourceArn: webSocketApi.arnForExecuteApiV2('$default', 'prod'),
+    });
 
-    new CfnRouteResponse(
-      this,
-      'PlanningPokerWebSocketApiDefaultRouteResponse',
-      {
-        apiId: webSocketApi.apiId,
-        routeId: webSocketDefaultRoute.ref,
-        routeResponseKey: '$default',
-      },
-    );
-
-    webSocketApi.node.addDependency(account);
+    new CfnRouteResponse(this, 'PokerWebSocketDefaultRouteResponse', {
+      apiId: webSocketApi.apiId,
+      routeId: webSocketDefaultRoute.ref,
+      routeResponseKey: '$default',
+    });
 
     // Stage + Domain mapping
 
-    const domainName = new DomainName(
-      this,
-      'PlanningPokerWebSocketApiDomainName',
-      {
-        domainName: webSocketDomainName,
-        certificate: importedCertificate,
-        endpointType: EndpointType.REGIONAL,
-      },
-    );
+    const domainName = new DomainName(this, 'PokerWebSocketDomainName', {
+      domainName: webSocketDomainName,
+      certificate: importedCertificate,
+      endpointType: EndpointType.REGIONAL,
+    });
 
-    const stage = new WebSocketStage(
-      this,
-      'PlanningPokerWebSocketApiProdStage',
-      {
-        stageName: 'prod',
-        webSocketApi: webSocketApi,
-        autoDeploy: true,
-        domainMapping: { domainName: domainName },
-      },
-    );
+    const stage = new WebSocketStage(this, 'PokerWebSocketProdStage', {
+      stageName: 'prod',
+      webSocketApi: webSocketApi,
+      autoDeploy: true,
+      domainMapping: { domainName: domainName },
+    });
 
     const cfnStage = stage.node.defaultChild as CfnStage;
 
-    const logGroup = new LogGroup(this, 'PlanningPokerWebSocketAccessLogs', {
+    const logGroup = new LogGroup(this, 'PokerWebSocketAccessLogs', {
       retention: RetentionDays.THREE_MONTHS,
     });
 
@@ -264,20 +210,5 @@ export class BackendWebSocketApiStack extends Stack {
         responseLength: '$context.responseLength',
       }),
     };
-  }
-
-  configureCloudWatchRole(stack: Stack) {
-    const role = new Role(stack, 'CloudWatchRole', {
-      assumedBy: new ServicePrincipal('apigateway.amazonaws.com'),
-      managedPolicies: [
-        ManagedPolicy.fromAwsManagedPolicyName(
-          'service-role/AmazonAPIGatewayPushToCloudWatchLogs',
-        ),
-      ],
-    });
-
-    return new CfnAccount(stack, 'Account', {
-      cloudWatchRoleArn: role.roleArn,
-    });
   }
 }
