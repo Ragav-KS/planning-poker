@@ -32,6 +32,7 @@ describe('Sample test for Infra Stack', () => {
         tables: {
           roomsTable: databaseStack.roomsTable,
         },
+        appJwtSecretKey: env.APP_JWT_SECRET_KEY,
       },
     );
     backendLambdaStack.addDependency(databaseStack);

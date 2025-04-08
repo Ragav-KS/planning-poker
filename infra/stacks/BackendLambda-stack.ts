@@ -13,6 +13,7 @@ import { readFileSync } from 'fs';
 import { resolve } from 'path';
 
 interface BackendLambdaStackProps extends StackProps {
+  appJwtSecretKey: string;
   tables: {
     roomsTable: Table;
   };
@@ -25,6 +26,7 @@ export class BackendLambdaStack extends Stack {
     super(scope, id, props);
 
     const {
+      appJwtSecretKey,
       tables: { roomsTable },
     } = props;
 
@@ -41,6 +43,9 @@ export class BackendLambdaStack extends Stack {
         retention: RetentionDays.THREE_MONTHS,
       }),
       tracing: Tracing.ACTIVE,
+      environment: {
+        APP_JWT_SECRET_KEY: appJwtSecretKey
+      }
     });
 
     this.lambdaFnAlias = new Alias(this, 'PokerFnAlias', {

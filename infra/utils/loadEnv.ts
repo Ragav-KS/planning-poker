@@ -7,7 +7,8 @@ const envVariablesToCheck = [
   // App specific env variables
   'APP_DOMAIN_CERTIFICATE_ARN',
   'APP_WEBSOCKET_DOMAIN',
-  'APP_RESTAPI_DOMAIN'
+  'APP_RESTAPI_DOMAIN',
+  'APP_JWT_SECRET_KEY',
 ] as const;
 
 export function loadAndVerifyEnv(

@@ -46,6 +46,7 @@ const backendLambdaStack = new BackendLambdaStack(
       account: defaultAccount,
       region: defaultRegion,
     },
+    appJwtSecretKey: env.APP_JWT_SECRET_KEY,
     tables: {
       roomsTable: databaseStack.roomsTable,
     },
