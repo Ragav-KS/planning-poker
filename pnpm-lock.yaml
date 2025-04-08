@@ -33,34 +33,7 @@ importers:
         specifier: ^5.8.2
         version: 5.8.2
 
-  apps/authorizer:
-    devDependencies:
-      '@planning-poker/eslint-config':
-        specifier: workspace:*
-        version: link:../../tools/eslint-config
-      '@types/aws-lambda':
-        specifier: ^8.10.148
-        version: 8.10.148
-      '@types/node':
-        specifier: ^22.13.10
-        version: 22.13.10
-      esbuild:
-        specifier: ^0.21.4
-        version: 0.21.5
-      eslint:
-        specifier: ^9.22.0
-        version: 9.22.0(jiti@2.4.2)
-      typescript:
-        specifier: ^5.8.2
-        version: 5.8.2
-      vite:
-        specifier: ^6.2.2
-        version: 6.2.2(@types/node@22.13.10)(jiti@2.4.2)(tsx@4.19.3)
-      vitest:
-        specifier: ^3.0.9
-        version: 3.0.9(@types/node@22.13.10)(jiti@2.4.2)(tsx@4.19.3)
-
-  apps/backend-lambda:
+  apps/backend:
     dependencies:
       '@aws-sdk/client-dynamodb':
         specifier: ^3.782.0
@@ -68,9 +41,18 @@ importers:
       '@aws-sdk/lib-dynamodb':
         specifier: ^3.782.0
         version: 3.782.0(@aws-sdk/client-dynamodb@3.782.0)
+      '@hono/zod-validator':
+        specifier: ^0.4.3
+        version: 0.4.3(hono@4.7.5)(zod@3.24.2)
       hono:
         specifier: ^4.7.5
         version: 4.7.5
+      jose:
+        specifier: ^6.0.10
+        version: 6.0.10
+      zod:
+        specifier: ^3.24.2
+        version: 3.24.2
     devDependencies:
       '@hono/node-server':
         specifier: ^1.14.0
@@ -718,6 +700,12 @@ packages:
       '@hono/node-server': ^1.11.1
       hono: ^4.6.0
 
+  '@hono/zod-validator@0.4.3':
+    resolution: {integrity: sha512-xIgMYXDyJ4Hj6ekm9T9Y27s080Nl9NXHcJkOvkXPhubOLj8hZkOL8pDnnXfvCf5xEE8Q4oMFenQUZZREUY2gqQ==}
+    peerDependencies:
+      hono: '>=3.9.0'
+      zod: ^3.19.1
+
   '@humanfs/core@0.19.1':
     resolution: {integrity: sha512-5DyQ4+1JEUzejeK1JGICcideyfUbGixgS9jNgex5nqkW+cY7WZhxBigmieN5Qnw9ZosSNVC9KQKyb+GUaGyKUA==}
     engines: {node: '>=18.18.0'}
@@ -1059,9 +1047,6 @@ packages:
 
   '@tsconfig/node16@1.0.4':
     resolution: {integrity: sha512-vxhUy4J8lyeyinH7Azl1pdd43GJhZH/tP2weN8TntQblOY+A0XbT8DJk1/oCPuOOyg/Ja757rG0CgHcWC8OfMA==}
-
-  '@types/aws-lambda@8.10.148':
-    resolution: {integrity: sha512-JL+2cfkY9ODQeE06hOxSFNkafjNk4JRBgY837kpoq1GHDttq2U3BA9IzKOWxS4DLjKoymGB4i9uBrlCkjUl1yg==}
 
   '@types/conventional-commits-parser@5.0.1':
     resolution: {integrity: sha512-7uz5EHdzz2TqoMfV7ee61Egf5y6NkcO4FB/1iCCQnbeiI1F3xzv3vK5dBCXUCLQgGYS+mUeigK1iKQzvED+QnQ==}
@@ -1687,6 +1672,9 @@ packages:
     resolution: {integrity: sha512-rg9zJN+G4n2nfJl5MW3BMygZX56zKPNVEYYqq7adpmMh4Jn2QNEwhvQlFy6jPVdcod7txZtKHWnyZiA3a0zP7A==}
     hasBin: true
 
+  jose@6.0.10:
+    resolution: {integrity: sha512-skIAxZqcMkOrSwjJvplIPYrlXGpxTPnro2/QWTDCxAdWQrSTV5/KqspMWmi5WAx5+ULswASJiZ0a+1B/Lxt9cw==}
+
   js-tokens@4.0.0:
     resolution: {integrity: sha512-RdJUflcE3cUzKiMqQgsCu06FPu9UdIJO0beYbPhHN4k6apgJtifcoCtT9bcxOpYBtpD2kCM6Sbzg4CausW/PKQ==}
 
@@ -2308,6 +2296,9 @@ packages:
   yocto-queue@1.2.0:
     resolution: {integrity: sha512-KHBC7z61OJeaMGnF3wqNZj+GGNXOyypZviiKpQeiHirG5Ib1ImwcLBH70rbMSkKfSmUNBsdf2PwaEJtKvgmkNw==}
     engines: {node: '>=12.20'}
+
+  zod@3.24.2:
+    resolution: {integrity: sha512-lY7CDW43ECgW9u1TcT3IoXHflywfVqDYze4waEz812jR/bZ8FHDsl7pFQoSZTz5N+2NqRXs8GBwnAwo3ZNxqhQ==}
 
 snapshots:
 
@@ -3029,6 +3020,11 @@ snapshots:
       - bufferutil
       - utf-8-validate
 
+  '@hono/zod-validator@0.4.3(hono@4.7.5)(zod@3.24.2)':
+    dependencies:
+      hono: 4.7.5
+      zod: 3.24.2
+
   '@humanfs/core@0.19.1': {}
 
   '@humanfs/node@0.16.6':
@@ -3415,8 +3411,6 @@ snapshots:
   '@tsconfig/node14@1.0.3': {}
 
   '@tsconfig/node16@1.0.4': {}
-
-  '@types/aws-lambda@8.10.148': {}
 
   '@types/conventional-commits-parser@5.0.1':
     dependencies:
@@ -4086,6 +4080,8 @@ snapshots:
 
   jiti@2.4.2: {}
 
+  jose@6.0.10: {}
+
   js-tokens@4.0.0: {}
 
   js-yaml@4.1.0:
@@ -4664,3 +4660,5 @@ snapshots:
   yocto-queue@0.1.0: {}
 
   yocto-queue@1.2.0: {}
+
+  zod@3.24.2: {}
