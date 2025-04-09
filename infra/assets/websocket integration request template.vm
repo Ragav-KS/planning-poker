@@ -14,7 +14,7 @@
 #end
 #if($context.routeKey == "\$connect")
   #set($path = "/websocket/connect")
-  #set($httpMethod = "GET")
+  #set($httpMethod = "POST")
 #end
 #if($context.routeKey == "\$disconnect")
   #set($path = "/websocket/connect")
@@ -44,6 +44,9 @@
     "requestId": "$context.requestId",
     "identity": {
       "sourceIp": "$context.identity.sourceIp"
+    },
+    "authorizer": {
+      "principalId": "$context.authorizer.principalId"
     },
     "domainName": "$context.domainName",
     "apiId": "$context.apiId"

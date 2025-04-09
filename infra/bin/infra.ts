@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import { App } from 'aws-cdk-lib';
+import { AuthorizerLambdaStack } from '../stacks/AuthorizerLambda-stack';
 import { BackendLambdaStack } from '../stacks/BackendLambda-stack';
 import { CloudWatchRoleStack } from '../stacks/CloudWatchRole-stack';
 import { DatabaseStack } from '../stacks/Database-stack';
@@ -64,6 +65,18 @@ const httpApiStack = new RestApiStack(app, 'Poker-RestApiStack', {
 });
 httpApiStack.addDependency(cloudWatchConfigStack);
 
+const authorizerLambdaStack = new AuthorizerLambdaStack(
+  app,
+  'Poker-AuthorizerLambdaStack',
+  {
+    env: {
+      account: defaultAccount,
+      region: defaultRegion,
+    },
+    appJwtSecretKey: env.APP_JWT_SECRET_KEY,
+  },
+);
+
 const webSocketApiStack = new WebSocketApiStack(
   app,
   'Poker-WebSocketApiStack',
@@ -74,7 +87,8 @@ const webSocketApiStack = new WebSocketApiStack(
     },
     webSocketDomainName: webSocketDomainName,
     webSocketDomainCertificate: appDomainCertArn,
-    lambdaFnAliasArn: backendLambdaStack.lambdaFnAlias.functionArn,
+    backendFnAliasArn: backendLambdaStack.lambdaFnAlias.functionArn,
+    authorizerFnAliasArn: authorizerLambdaStack.authorizerFnAlias.functionArn,
   },
 );
 webSocketApiStack.addDependency(cloudWatchConfigStack);

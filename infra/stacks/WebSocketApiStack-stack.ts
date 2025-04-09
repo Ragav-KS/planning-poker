@@ -7,6 +7,8 @@ import {
   DomainName,
   EndpointType,
   WebSocketApi,
+  WebSocketAuthorizer,
+  WebSocketAuthorizerType,
   WebSocketStage,
   type CfnStage,
 } from 'aws-cdk-lib/aws-apigatewayv2';
@@ -21,7 +23,8 @@ import { resolve } from 'path';
 interface WebSocketApiStackProps extends StackProps {
   webSocketDomainName: string;
   webSocketDomainCertificate: string;
-  lambdaFnAliasArn: string;
+  backendFnAliasArn: string;
+  authorizerFnAliasArn: string;
 }
 
 export class WebSocketApiStack extends Stack {
@@ -31,7 +34,8 @@ export class WebSocketApiStack extends Stack {
     const {
       webSocketDomainName,
       webSocketDomainCertificate,
-      lambdaFnAliasArn,
+      backendFnAliasArn,
+      authorizerFnAliasArn,
     } = props;
 
     const importedCertificate = Certificate.fromCertificateArn(
@@ -40,10 +44,16 @@ export class WebSocketApiStack extends Stack {
       webSocketDomainCertificate,
     );
 
-    const lambdaFnAlias = Function.fromFunctionAttributes(
+    const backendFnAlias = Function.fromFunctionAttributes(
       this,
-      'ImportedLambdaAlias',
-      { functionArn: lambdaFnAliasArn, sameEnvironment: true },
+      'ImportedBackendFnAlias',
+      { functionArn: backendFnAliasArn, sameEnvironment: true },
+    );
+
+    const authorizerFnAlias = Function.fromFunctionAttributes(
+      this,
+      'ImportedAuthorizerFnAlias',
+      { functionArn: authorizerFnAliasArn, sameEnvironment: true },
     );
 
     // WebSocket API
@@ -72,7 +82,7 @@ export class WebSocketApiStack extends Stack {
       {
         apiId: webSocketApi.apiId,
         integrationType: 'AWS',
-        integrationUri: `arn:aws:apigateway:${this.region}:lambda:path/2015-03-31/functions/${lambdaFnAlias.functionArn}/invocations`,
+        integrationUri: `arn:aws:apigateway:${this.region}:lambda:path/2015-03-31/functions/${backendFnAlias.functionArn}/invocations`,
         templateSelectionExpression: '\\$connect',
         requestTemplates: {
           $default: requestTemplate,
@@ -94,6 +104,26 @@ export class WebSocketApiStack extends Stack {
       },
     );
 
+    const authorizer = new WebSocketAuthorizer(
+      this,
+      'PokerWebSocketAuthorizer',
+      {
+        webSocketApi: webSocketApi,
+        type: WebSocketAuthorizerType.LAMBDA,
+        identitySource: ['route.request.header.Authorization'],
+        authorizerName: 'PokerWebSocketAuthorizer',
+        authorizerUri: `arn:aws:apigateway:${this.region}:lambda:path/2015-03-31/functions/${authorizerFnAlias.functionArn}/invocations`,
+      },
+    );
+
+    authorizerFnAlias.addPermission('PokerWebSocketAuthorizer', {
+      principal: new ServicePrincipal('apigateway.amazonaws.com'),
+      sourceArn: webSocketApi.arnForExecuteApiV2(
+        authorizer.authorizerId,
+        'authorizers',
+      ),
+    });
+
     const webSocketConnectRoute = new CfnRoute(
       this,
       'PokerWebSocketConnectRoute',
@@ -101,10 +131,12 @@ export class WebSocketApiStack extends Stack {
         apiId: webSocketApi.apiId,
         routeKey: '$connect',
         target: `integrations/${webSocketConnectRouteRequestIntegration.ref}`,
+        authorizationType: 'CUSTOM',
+        authorizerId: authorizer.authorizerId,
       },
     );
 
-    lambdaFnAlias.addPermission('PokerWebSocketConnectRoutePermission', {
+    backendFnAlias.addPermission('PokerWebSocketConnectRoutePermission', {
       principal: new ServicePrincipal('apigateway.amazonaws.com'),
       sourceArn: webSocketApi.arnForExecuteApiV2('$connect', 'prod'),
     });
@@ -123,7 +155,7 @@ export class WebSocketApiStack extends Stack {
       {
         apiId: webSocketApi.apiId,
         integrationType: 'AWS',
-        integrationUri: `arn:aws:apigateway:${this.region}:lambda:path/2015-03-31/functions/${lambdaFnAlias.functionArn}/invocations`,
+        integrationUri: `arn:aws:apigateway:${this.region}:lambda:path/2015-03-31/functions/${backendFnAlias.functionArn}/invocations`,
         templateSelectionExpression: '\\$default',
         requestTemplates: {
           $default: requestTemplate,
@@ -156,7 +188,7 @@ export class WebSocketApiStack extends Stack {
       },
     );
 
-    lambdaFnAlias.addPermission('PokerWebSocketDefaultRoutePermission', {
+    backendFnAlias.addPermission('PokerWebSocketDefaultRoutePermission', {
       principal: new ServicePrincipal('apigateway.amazonaws.com'),
       sourceArn: webSocketApi.arnForExecuteApiV2('$default', 'prod'),
     });
