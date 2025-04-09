@@ -1,0 +1,1 @@
+export const USERS_TABLE = 'Poker-UsersTable'

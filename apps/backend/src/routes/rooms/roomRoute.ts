@@ -1,19 +1,13 @@
-import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
-import {
-  DynamoDBDocumentClient,
-  PutCommand,
-  UpdateCommand,
-} from '@aws-sdk/lib-dynamodb';
+import { PutCommand } from '@aws-sdk/lib-dynamodb';
 import { zValidator } from '@hono/zod-validator';
 import { randomUUID } from 'crypto';
 import { sign } from 'hono/jwt';
 import { z } from 'zod';
+import { USERS_TABLE } from '../../constants';
 import { factory } from '../../hono-factory';
+import { docClient } from '../../services/aws-sdk/ddbClient';
 
 export const roomRoute = factory.createApp();
-
-const client = new DynamoDBClient();
-const docClient = DynamoDBDocumentClient.from(client);
 
 roomRoute.post(
   '/create',
@@ -30,17 +24,14 @@ roomRoute.post(
     const userId = randomUUID();
 
     const command = new PutCommand({
-      TableName: 'rooms',
+      TableName: USERS_TABLE,
       Item: {
+        userId,
+        name: userName,
         roomId: roomId,
-        members: [
-          {
-            userId: userId,
-            userName: userName,
-            vote: 0,
-          },
-        ],
+        vote: 0,
       },
+      ConditionExpression: 'attribute_not_exists(userId)',
     });
 
     await docClient.send(command);
@@ -71,23 +62,20 @@ roomRoute.post(
   async (c) => {
     const userName = c.req.valid('json').userName;
     const roomId = c.req.valid('json').roomId;
-    const userId = randomUUID();
-    const members = {
-      userId: userId,
-      userName: userName,
-      vote: 0,
-    };
 
-    const command = new UpdateCommand({
-      TableName: 'rooms',
-      Key: {
+    const userId = randomUUID();
+
+    const command = new PutCommand({
+      TableName: USERS_TABLE,
+      Item: {
+        userId,
+        name: userName,
         roomId: roomId,
+        vote: 0,
       },
-      UpdateExpression: 'SET members = list_append(members, :new_member)',
-      ExpressionAttributeValues: {
-        ':new_member': [members],
-      },
+      ConditionExpression: 'attribute_not_exists(userId)',
     });
+
     await docClient.send(command);
 
     const token = await sign(
