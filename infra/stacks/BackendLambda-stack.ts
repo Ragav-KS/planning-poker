@@ -15,7 +15,7 @@ import { resolve } from 'path';
 interface BackendLambdaStackProps extends StackProps {
   appJwtSecretKey: string;
   tables: {
-    roomsTable: Table;
+    usersTable: Table;
   };
 }
 
@@ -27,7 +27,7 @@ export class BackendLambdaStack extends Stack {
 
     const {
       appJwtSecretKey,
-      tables: { roomsTable },
+      tables: { usersTable },
     } = props;
 
     const placeholderCode = readFileSync(
@@ -44,8 +44,8 @@ export class BackendLambdaStack extends Stack {
       }),
       tracing: Tracing.ACTIVE,
       environment: {
-        APP_JWT_SECRET_KEY: appJwtSecretKey
-      }
+        APP_JWT_SECRET_KEY: appJwtSecretKey,
+      },
     });
 
     this.lambdaFnAlias = new Alias(this, 'PokerFnAlias', {
@@ -53,6 +53,6 @@ export class BackendLambdaStack extends Stack {
       version: lambdaFn.latestVersion,
     });
 
-    roomsTable.grantReadWriteData(this.lambdaFnAlias);
+    usersTable.grantReadWriteData(this.lambdaFnAlias);
   }
 }

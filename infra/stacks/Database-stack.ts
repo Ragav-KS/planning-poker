@@ -3,15 +3,15 @@ import { AttributeType, Table } from 'aws-cdk-lib/aws-dynamodb';
 import type { Construct } from 'constructs';
 
 export class DatabaseStack extends Stack {
-  public readonly roomsTable: Table;
+  public readonly usersTable: Table;
 
   constructor(scope: Construct, id: string, props: StackProps) {
     super(scope, id, props);
 
-    this.roomsTable = new Table(this, 'PokerRoomsTable', {
-      tableName: 'rooms',
+    this.usersTable = new Table(this, 'UsersTable', {
+      tableName: 'Poker-UsersTable',
       partitionKey: {
-        name: 'roomId',
+        name: 'userId',
         type: AttributeType.STRING,
       },
       removalPolicy: RemovalPolicy.DESTROY,
