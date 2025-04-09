@@ -1,5 +1,6 @@
 import { serve } from '@hono/node-server';
 import { createNodeWebSocket } from '@hono/node-ws';
+import { randomUUID } from 'crypto';
 import { Hono } from 'hono';
 import { jwt } from 'hono/jwt';
 import type { JWTPayload } from 'hono/utils/jwt/types';
@@ -26,12 +27,18 @@ localApp.get(
       },
     };
 
+    const connectionId = randomUUID();
+
     return {
       async onOpen() {
+        const headers = new Headers();
+        headers.set('X-WebSocket-Connection-Id', connectionId);
+
         await app.request(
           `/websocket/connect`,
           {
             method: 'POST',
+            headers,
           },
           {
             requestContext: customRequestContext,
@@ -48,6 +55,7 @@ localApp.get(
 
         const headers = new Headers();
         headers.set('Content-Type', 'application/json');
+        headers.set('X-WebSocket-Connection-Id', connectionId);
 
         const res = await app.request(
           `/websocket/default/${action}`,
