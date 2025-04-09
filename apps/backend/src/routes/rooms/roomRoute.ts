@@ -47,8 +47,7 @@ roomRoute.post(
 
     const token = await sign(
       {
-        userId: userId,
-        roomId: roomId,
+        sub: userId,
       },
       process.env.APP_JWT_SECRET_KEY,
     );
@@ -93,8 +92,7 @@ roomRoute.post(
 
     const token = await sign(
       {
-        userId: userId,
-        roomId: roomId,
+        sub: userId,
       },
       process.env.APP_JWT_SECRET_KEY,
     );

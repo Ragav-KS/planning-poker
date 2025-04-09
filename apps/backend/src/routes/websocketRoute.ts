@@ -4,7 +4,7 @@ import { webSocketDefaultRoute } from './websocket/defaultRoute';
 export const websocketRoute = factory.createApp();
 
 websocketRoute
-  .get('/connect', async (c) => {
+  .post('/connect', async (c) => {
     console.log('Connect route called');
     return c.text('connected');
   })

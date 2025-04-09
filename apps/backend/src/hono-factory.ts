@@ -7,10 +7,17 @@ import type {
 import { Factory } from 'hono/factory';
 import type { Bindings, Variables } from 'hono/types';
 
+export interface CustomApiGatewayRequestContext
+  extends Omit<ApiGatewayRequestContext, 'authorizer'> {
+  authorizer: {
+    principalId: string;
+  };
+}
+
 interface AWSBindings extends Bindings {
   event: LambdaEvent;
   lambdaContext: LambdaContext;
-  requestContext: ApiGatewayRequestContext;
+  requestContext: CustomApiGatewayRequestContext;
 }
 
 interface AWSHonoEnv extends Env {
