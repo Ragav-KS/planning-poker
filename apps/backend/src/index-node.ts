@@ -61,9 +61,11 @@ localApp.get(
           },
         );
 
-        const responseBody = await res.json();
+        if (res.status === 200) {
+          const responseBody = await res.json();
 
-        ws.send(JSON.stringify(responseBody));
+          ws.send(JSON.stringify(responseBody));
+        }
       },
       async onClose() {
         await app.request(
