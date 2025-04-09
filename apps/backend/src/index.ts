@@ -1,7 +1,7 @@
 import { handle } from 'hono/aws-lambda';
+import { factory } from './hono-factory';
 import { apiRoute } from './routes/apiRoute';
 import { websocketRoute } from './routes/websocketRoute';
-import { factory } from './hono-factory';
 
 export const app = factory.createApp();
 
