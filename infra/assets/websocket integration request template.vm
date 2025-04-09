@@ -51,6 +51,6 @@
     "domainName": "$context.domainName",
     "apiId": "$context.apiId"
   },
-  "body": $input.json('$.data'),
+  "body": "$util.escapeJavaScript($input.json('$.data'))",
   "isBase64Encoded": false
 }
