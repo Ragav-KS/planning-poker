@@ -1,9 +1,9 @@
-import { Hono } from 'hono';
 import { handle } from 'hono/aws-lambda';
 import { apiRoute } from './routes/apiRoute';
 import { websocketRoute } from './routes/websocketRoute';
+import { factory } from './hono-factory';
 
-export const app = new Hono();
+export const app = factory.createApp();
 
 app.notFound((c) => {
   return c.json(

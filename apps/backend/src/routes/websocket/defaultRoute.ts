@@ -1,6 +1,6 @@
-import { Hono } from 'hono';
+import { factory } from '../../hono-factory';
 
-export const webSocketDefaultRoute = new Hono();
+export const webSocketDefaultRoute = factory.createApp();
 
 webSocketDefaultRoute.post('/vote', async (c) => {
   const body = await c.req.json();

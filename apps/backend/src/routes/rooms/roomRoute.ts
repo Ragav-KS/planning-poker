@@ -6,11 +6,11 @@ import {
 } from '@aws-sdk/lib-dynamodb';
 import { zValidator } from '@hono/zod-validator';
 import { randomUUID } from 'crypto';
-import { Hono } from 'hono';
 import { sign } from 'hono/jwt';
 import { z } from 'zod';
+import { factory } from '../../hono-factory';
 
-export const roomRoute = new Hono();
+export const roomRoute = factory.createApp();
 
 const client = new DynamoDBClient();
 const docClient = DynamoDBDocumentClient.from(client);

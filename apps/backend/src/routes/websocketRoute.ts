@@ -1,7 +1,7 @@
-import { Hono } from 'hono';
+import { factory } from '../hono-factory';
 import { webSocketDefaultRoute } from './websocket/defaultRoute';
 
-export const websocketRoute = new Hono();
+export const websocketRoute = factory.createApp();
 
 websocketRoute
   .get('/connect', async (c) => {
