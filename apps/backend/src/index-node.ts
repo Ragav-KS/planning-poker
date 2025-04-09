@@ -46,10 +46,14 @@ localApp.get(
         const action = messageJson['action'];
         const data = messageJson['data'];
 
+        const headers = new Headers();
+        headers.set('Content-Type', 'application/json');
+
         const res = await app.request(
           `/websocket/default/${action}`,
           {
             method: 'POST',
+            headers,
             body: JSON.stringify(data),
           },
           {
