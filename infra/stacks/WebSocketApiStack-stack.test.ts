@@ -60,6 +60,8 @@ describe('Sample test for Infra Stack', () => {
         },
         webSocketDomainName: env.APP_WEBSOCKET_DOMAIN,
         webSocketDomainCertificate: env.APP_WEBSOCKET_DOMAIN,
+        backendFnExecutionRoleArn:
+          backendLambdaStack.lambdaExecutionRole.roleArn,
         backendFnAliasArn: backendLambdaStack.lambdaFnAlias.functionArn,
         authorizerFnAliasArn:
           authorizerLambdaStack.authorizerFnAlias.functionArn,

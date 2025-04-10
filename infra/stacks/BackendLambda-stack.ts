@@ -1,5 +1,6 @@
 import { Stack, type StackProps } from 'aws-cdk-lib';
 import type { Table } from 'aws-cdk-lib/aws-dynamodb';
+import { ManagedPolicy, Role, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
 import {
   Alias,
   Code,
@@ -20,6 +21,7 @@ interface BackendLambdaStackProps extends StackProps {
 }
 
 export class BackendLambdaStack extends Stack {
+  public readonly lambdaExecutionRole: Role;
   public readonly lambdaFnAlias: Alias;
 
   constructor(scope: Construct, id: string, props: BackendLambdaStackProps) {
@@ -34,10 +36,20 @@ export class BackendLambdaStack extends Stack {
       resolve(__dirname, '../assets/placeholderLambdaCode.js'),
     ).toString('utf-8');
 
+    this.lambdaExecutionRole = new Role(this, 'PokerFnExecutionRole', {
+      managedPolicies: [
+        ManagedPolicy.fromAwsManagedPolicyName(
+          'service-role/AWSLambdaBasicExecutionRole',
+        ),
+      ],
+      assumedBy: new ServicePrincipal('lambda.amazonaws.com'),
+    });
+
     const lambdaFn = new Function(this, 'PokerFn', {
       runtime: Runtime.NODEJS_22_X,
       handler: 'index.handler',
       code: Code.fromInline(placeholderCode),
+      role: this.lambdaExecutionRole,
       logGroup: new LogGroup(this, 'PokerRestApiAccessLogs', {
         logGroupName: 'PokerLambdaFnLogs',
         retention: RetentionDays.THREE_MONTHS,
@@ -53,6 +65,6 @@ export class BackendLambdaStack extends Stack {
       version: lambdaFn.latestVersion,
     });
 
-    usersTable.grantReadWriteData(this.lambdaFnAlias);
+    usersTable.grantReadWriteData(this.lambdaExecutionRole);
   }
 }

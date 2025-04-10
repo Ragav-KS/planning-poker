@@ -13,7 +13,7 @@ import {
   type CfnStage,
 } from 'aws-cdk-lib/aws-apigatewayv2';
 import { Certificate } from 'aws-cdk-lib/aws-certificatemanager';
-import { ServicePrincipal } from 'aws-cdk-lib/aws-iam';
+import { Role, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
 import { Function } from 'aws-cdk-lib/aws-lambda';
 import { LogGroup, RetentionDays } from 'aws-cdk-lib/aws-logs';
 import { Construct } from 'constructs';
@@ -23,6 +23,7 @@ import { resolve } from 'path';
 interface WebSocketApiStackProps extends StackProps {
   webSocketDomainName: string;
   webSocketDomainCertificate: string;
+  backendFnExecutionRoleArn: string;
   backendFnAliasArn: string;
   authorizerFnAliasArn: string;
 }
@@ -34,6 +35,7 @@ export class WebSocketApiStack extends Stack {
     const {
       webSocketDomainName,
       webSocketDomainCertificate,
+      backendFnExecutionRoleArn,
       backendFnAliasArn,
       authorizerFnAliasArn,
     } = props;
@@ -42,6 +44,12 @@ export class WebSocketApiStack extends Stack {
       this,
       'PokerImportedDomainCertificateArn',
       webSocketDomainCertificate,
+    );
+
+    const backendFnExecutionRole = Role.fromRoleArn(
+      this,
+      'PokerFnExecutionRole',
+      backendFnExecutionRoleArn,
     );
 
     const backendFnAlias = Function.fromFunctionAttributes(
@@ -62,6 +70,8 @@ export class WebSocketApiStack extends Stack {
       apiName: 'PokerWebSocket',
       routeSelectionExpression: '$request.body.action',
     });
+
+    webSocketApi.grantManageConnections(backendFnExecutionRole);
 
     const requestTemplate = readFileSync(
       resolve(__dirname, '../assets/websocket integration request template.vm'),

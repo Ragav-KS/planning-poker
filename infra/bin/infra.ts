@@ -87,6 +87,7 @@ const webSocketApiStack = new WebSocketApiStack(
     },
     webSocketDomainName: webSocketDomainName,
     webSocketDomainCertificate: appDomainCertArn,
+    backendFnExecutionRoleArn: backendLambdaStack.lambdaExecutionRole.roleArn,
     backendFnAliasArn: backendLambdaStack.lambdaFnAlias.functionArn,
     authorizerFnAliasArn: authorizerLambdaStack.authorizerFnAlias.functionArn,
   },
