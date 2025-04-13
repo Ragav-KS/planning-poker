@@ -15,7 +15,20 @@
         "APP_JWT_SECRET_KEY": "localKey"
       },
       "runtimeExecutable": "pnpm",
+      "console": "integratedTerminal",
       "runtimeArgs": ["--filter", "@planning-poker/backend", "dev"]
+    },
+    {
+      "name": "Launch Websocket server",
+      "type": "node",
+      "request": "launch",
+      "cwd": "${workspaceRoot}",
+      "env": {
+        "APP_JWT_SECRET_KEY": "localKey"
+      },
+      "runtimeExecutable": "pnpm",
+      "console": "integratedTerminal",
+      "runtimeArgs": ["--filter", "@planning-poker/backend", "dev-ws"]
     }
   ]
 }

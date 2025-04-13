@@ -20,9 +20,15 @@ interface AWSBindings extends Bindings {
   requestContext: CustomApiGatewayRequestContext;
 }
 
+interface CustomVariables extends Variables {
+  authorizer: {
+    principalId: string;
+  };
+}
+
 interface AWSHonoEnv extends Env {
   Bindings: AWSBindings;
-  Variables: Variables;
+  Variables: CustomVariables;
 }
 
 export const factory = new Factory<AWSHonoEnv>();

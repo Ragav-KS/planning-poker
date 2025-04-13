@@ -91,6 +91,9 @@ importers:
       '@hono/node-ws':
         specifier: ^1.1.0
         version: 1.1.0(@hono/node-server@1.14.0(hono@4.7.5))(hono@4.7.5)
+      '@hono/vite-dev-server':
+        specifier: ^0.19.0
+        version: 0.19.0(hono@4.7.5)
       '@planning-poker/eslint-config':
         specifier: workspace:*
         version: link:../../tools/eslint-config
@@ -118,6 +121,9 @@ importers:
       vitest:
         specifier: ^3.0.9
         version: 3.0.9(@types/node@22.13.10)(jiti@2.4.2)(tsx@4.19.3)
+      xior:
+        specifier: ^0.7.8
+        version: 0.7.8
 
   infra:
     dependencies:
@@ -730,6 +736,19 @@ packages:
     peerDependencies:
       '@hono/node-server': ^1.11.1
       hono: ^4.6.0
+
+  '@hono/vite-dev-server@0.19.0':
+    resolution: {integrity: sha512-myMc4Nm0nFQSPaeE6I/a1ODyDR5KpQ4EHodX4Tu/7qlB31GfUemhUH/WsO91HJjDEpRRpsT4Zbg+PleMlpTljw==}
+    engines: {node: '>=18.14.1'}
+    peerDependencies:
+      hono: '*'
+      miniflare: '*'
+      wrangler: '*'
+    peerDependenciesMeta:
+      miniflare:
+        optional: true
+      wrangler:
+        optional: true
 
   '@hono/zod-validator@0.4.3':
     resolution: {integrity: sha512-xIgMYXDyJ4Hj6ekm9T9Y27s080Nl9NXHcJkOvkXPhubOLj8hZkOL8pDnnXfvCf5xEE8Q4oMFenQUZZREUY2gqQ==}
@@ -2243,6 +2262,10 @@ packages:
   through@2.3.8:
     resolution: {integrity: sha512-w89qg7PI8wAdvX60bMDP+bFoD5Dvhm9oLheFp5O4a2QF0cSBGsBX4qZmadPMvVqlLJBBci+WqGGOAPvcDeNSVg==}
 
+  tiny-lru@11.2.11:
+    resolution: {integrity: sha512-27BIW0dIWTYYoWNnqSmoNMKe5WIbkXsc0xaCQHd3/3xT2XMuMJrzHdrO9QBFR14emBz1Bu0dOAs2sCBBrvgPQA==}
+    engines: {node: '>=12'}
+
   tinybench@2.9.0:
     resolution: {integrity: sha512-0+DUvqWMValLmha6lr4kD8iAMK1HzV0/aKnCtWb9v9641TnP/MFb7Pc2bxoxQjTXAErryXVgUOfv2YqNllqGeg==}
 
@@ -2496,6 +2519,9 @@ packages:
         optional: true
       utf-8-validate:
         optional: true
+
+  xior@0.7.8:
+    resolution: {integrity: sha512-NQt5qZmQi7GXuJ+M8KImxGOIPBl+CqoSVo2P8K4qzBQfYIQQmnaPDbxegjNzWAucOAgsGBQlR6FHZPINJXWD1g==}
 
   xml2js@0.6.2:
     resolution: {integrity: sha512-T4rieHaC1EXcES0Kxxj4JWgaUQHDk+qwHcYOCFHfiwKz7tOVPLq7Hjq9dM1WCMhylqMEfP7hMcOIChvotiZegA==}
@@ -3251,6 +3277,12 @@ snapshots:
     transitivePeerDependencies:
       - bufferutil
       - utf-8-validate
+
+  '@hono/vite-dev-server@0.19.0(hono@4.7.5)':
+    dependencies:
+      '@hono/node-server': 1.14.0(hono@4.7.5)
+      hono: 4.7.5
+      minimatch: 9.0.5
 
   '@hono/zod-validator@0.4.3(hono@4.7.5)(zod@3.24.2)':
     dependencies:
@@ -4816,6 +4848,8 @@ snapshots:
 
   through@2.3.8: {}
 
+  tiny-lru@11.2.11: {}
+
   tinybench@2.9.0: {}
 
   tinyexec@0.3.2: {}
@@ -5092,6 +5126,10 @@ snapshots:
       strip-ansi: 6.0.1
 
   ws@8.18.1: {}
+
+  xior@0.7.8:
+    dependencies:
+      tiny-lru: 11.2.11
 
   xml2js@0.6.2:
     dependencies:
