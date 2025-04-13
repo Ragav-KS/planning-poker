@@ -10,6 +10,7 @@
     "zip": "zip -j lambda.zip dist/index.js"
   },
   "dependencies": {
+    "@aws-sdk/client-apigatewaymanagementapi": "^3.782.0",
     "@aws-sdk/client-dynamodb": "^3.782.0",
     "@aws-sdk/lib-dynamodb": "^3.782.0",
     "@hono/zod-validator": "^0.4.3",
