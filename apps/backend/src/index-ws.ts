@@ -1,16 +1,29 @@
 import { serve } from '@hono/node-server';
 import { createNodeWebSocket } from '@hono/node-ws';
+import { handler as authorizerHandler } from '@planning-poker/authorizer';
+import type {
+  APIGatewayRequestAuthorizerEvent,
+  Context as AWSContext,
+} from 'aws-lambda';
 import { randomUUID } from 'crypto';
-import { Hono } from 'hono';
-import { jwt } from 'hono/jwt';
-import type { JWTPayload } from 'hono/utils/jwt/types';
+import { Hono, type Context, type Env } from 'hono';
 import xior from 'xior';
 
 type SocketCallback = (data: string) => Promise<void> | void;
 
 const connections = new Map<string, SocketCallback>();
 
-const localApp = new Hono();
+interface CustomWSEnv extends Env {
+  Variables: {
+    principalId: string;
+  };
+}
+
+const localApp = new Hono<{
+  Variables: {
+    principalId: string;
+  };
+}>();
 
 const { injectWebSocket, upgradeWebSocket } = createNodeWebSocket({
   app: localApp,
@@ -37,10 +50,33 @@ localApp.post('/@connections/:path', async (c) => {
 });
 
 localApp.get(
-  '/socket',
-  jwt({ secret: process.env.APP_JWT_SECRET_KEY }),
-  upgradeWebSocket((c) => {
-    const authPayload = c.get('jwtPayload') as JWTPayload;
+  '/',
+  async (c, next) => {
+    const headers: Record<string, string | undefined> = {
+      Authorization: c.req.header('Authorization'),
+    };
+
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    const authorizerResult = await authorizerHandler(
+      {
+        headers,
+        methodArn: 'arn:localMethod',
+      } as APIGatewayRequestAuthorizerEvent,
+      {} as AWSContext,
+      // eslint-disable-next-line @typescript-eslint/no-empty-function
+      () => {},
+    )!;
+
+    if (authorizerResult.policyDocument.Statement[0].Effect === 'Deny') {
+      return c.json('Unauthorized', 401);
+    }
+
+    c.set('principalId', authorizerResult.principalId);
+
+    await next();
+  },
+  upgradeWebSocket((c: Context<CustomWSEnv>) => {
+    const principalId = c.get('principalId');
 
     const connectionId = randomUUID();
 
@@ -55,7 +91,7 @@ localApp.get(
           {
             headers: {
               'X-WebSocket-Connection-Id': connectionId,
-              principalId: authPayload.sub,
+              principalId,
             },
           },
         );
@@ -77,7 +113,7 @@ localApp.get(
           {
             headers: {
               'X-WebSocket-Connection-Id': connectionId,
-              principalId: authPayload.sub,
+              principalId,
             },
           },
         );
@@ -92,7 +128,7 @@ localApp.get(
         await pokerFnXior.delete(`/websocket/connect`, {
           headers: {
             'X-WebSocket-Connection-Id': connectionId,
-            principalId: authPayload.sub,
+            principalId,
           },
         });
 
