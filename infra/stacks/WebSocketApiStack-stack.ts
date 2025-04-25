@@ -209,6 +209,58 @@ export class WebSocketApiStack extends Stack {
       routeResponseKey: '$default',
     });
 
+    
+    // $disconnect route
+
+    const webSocketDisconnectRouteRequestIntegration = new CfnIntegration(
+      this,
+      'PokerWebSocketDisconnectRouteIntegration',
+      {
+        apiId: webSocketApi.apiId,
+        integrationType: 'AWS',
+        integrationUri: `arn:aws:apigateway:${this.region}:lambda:path/2015-03-31/functions/${backendFnAlias.functionArn}/invocations`,
+        templateSelectionExpression: '\\$disconnect',
+        requestTemplates: {
+          $default: requestTemplate,
+        },
+      },
+    );
+
+    new CfnIntegrationResponse(
+      this,
+      'PokerWebSocketDisconnectRouteIntegrationResponse',
+      {
+        apiId: webSocketApi.apiId,
+        integrationId: webSocketDisconnectRouteRequestIntegration.ref,
+        integrationResponseKey: '$default',
+        templateSelectionExpression: '$integration.response.statuscode',
+        responseTemplates: {
+          '200': '{}',
+        },
+      },
+    );
+    
+    const webSocketDisconnectRoute = new CfnRoute(
+      this,
+      'PokerWebSocketDisconnectRoute',
+      {
+        apiId: webSocketApi.apiId,
+        routeKey: '$disconnect',
+        target: `integrations/${webSocketDisconnectRouteRequestIntegration.ref}`,
+      },
+    );
+
+    backendFnAlias.addPermission('PokerWebSocketDisconnectRoutePermission', {
+      principal: new ServicePrincipal('apigateway.amazonaws.com'),
+      sourceArn: webSocketApi.arnForExecuteApiV2('$disconnect', 'prod'),
+    });
+
+    new CfnRouteResponse(this, 'PokerWebSocketDisconnectRouteResponse', {
+      apiId: webSocketApi.apiId,
+      routeId: webSocketDisconnectRoute.ref,
+      routeResponseKey: '$default',
+    });
+
     // Stage + Domain mapping
 
     const domainName = new DomainName(this, 'PokerWebSocketDomainName', {
