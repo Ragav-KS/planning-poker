@@ -1,4 +1,5 @@
 import { handle } from 'hono/aws-lambda';
+import { HTTPException } from 'hono/http-exception';
 import { factory } from './hono-factory';
 import { apiRoute } from './routes/apiRoute';
 import { websocketRoute } from './routes/websocketRoute';
@@ -16,6 +17,10 @@ app.notFound((c) => {
 
 app.onError(async (err, c) => {
   console.error(err);
+
+  if (err instanceof HTTPException) {
+    return err.getResponse();
+  }
 
   return c.json(
     {
