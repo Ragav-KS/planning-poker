@@ -1,7 +1,7 @@
-import { UpdateCommand } from '@aws-sdk/lib-dynamodb';
-import { USERS_TABLE } from '../constants';
+import type { UUID } from 'crypto';
 import { factory } from '../hono-factory';
-import { docClient } from '../services/aws-sdk/ddbClient';
+import { removeUserConnectionId } from '../services/removeUserConnectionId';
+import { updateUserConnectionId } from '../services/updateUserConnectionId';
 import { webSocketDefaultRoute } from './websocket/defaultRoute';
 
 export const websocketRoute = factory.createApp();
@@ -13,7 +13,8 @@ websocketRoute.use(async (c, next) => {
     const principalId = c.req.header('principalId');
 
     if (!principalId) throw new Error('Principal ID header missing');
-    c.set('authorizer', { principalId: principalId });
+
+    c.set('authorizer', { principalId: principalId as UUID });
   }
 
   await next();
@@ -22,27 +23,18 @@ websocketRoute.use(async (c, next) => {
 websocketRoute
   .post('/connect', async (c) => {
     const userId = c.get('authorizer').principalId;
-
     const connectionId = c.req.header('X-WebSocket-Connection-Id');
 
-    const command = new UpdateCommand({
-      TableName: USERS_TABLE,
-      Key: {
-        userId,
-      },
-      UpdateExpression: 'set connectionId = :connectionId',
-      ExpressionAttributeValues: {
-        ':connectionId': connectionId,
-      },
-    });
+    await updateUserConnectionId(userId, connectionId);
 
-    await docClient.send(command);
-
-    return c.body(null, 202);
+    return c.body(null, 204);
   })
   .delete('/connect', async (c) => {
-    console.log('Disconnect route called');
-    return c.text('disconnected');
+    const userId = c.get('authorizer').principalId;
+
+    await removeUserConnectionId(userId);
+
+    return c.body(null, 204);
   });
 
 websocketRoute.route('/default', webSocketDefaultRoute);

@@ -1,1 +1,1 @@
-export const USERS_TABLE = 'Poker-UsersTable'
+export const POKER_TABLE = 'PokerTable';

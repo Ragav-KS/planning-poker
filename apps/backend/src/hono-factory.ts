@@ -1,3 +1,4 @@
+import type { UUID } from 'crypto';
 import type { Env } from 'hono';
 import type {
   ApiGatewayRequestContext,
@@ -10,7 +11,7 @@ import type { Bindings, Variables } from 'hono/types';
 export interface CustomApiGatewayRequestContext
   extends Omit<ApiGatewayRequestContext, 'authorizer'> {
   authorizer: {
-    principalId: string;
+    principalId: UUID;
   };
 }
 
@@ -22,7 +23,7 @@ interface AWSBindings extends Bindings {
 
 interface CustomVariables extends Variables {
   authorizer: {
-    principalId: string;
+    principalId: UUID;
   };
 }
 

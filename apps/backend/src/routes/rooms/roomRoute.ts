@@ -1,11 +1,10 @@
-import { PutCommand } from '@aws-sdk/lib-dynamodb';
 import { zValidator } from '@hono/zod-validator';
-import { randomUUID } from 'crypto';
-import { sign } from 'hono/jwt';
+import type { UUID } from 'crypto';
 import { z } from 'zod';
-import { USERS_TABLE } from '../../constants';
 import { factory } from '../../hono-factory';
-import { docClient } from '../../services/aws-sdk/ddbClient';
+import { createRoomAndUser } from '../../services/createRoomAndUser';
+import { createUser } from '../../services/createUser';
+import { createUserToken } from '../../services/createUserToken';
 
 export const roomRoute = factory.createApp();
 
@@ -20,28 +19,9 @@ roomRoute.post(
   async (c) => {
     const userName = c.req.valid('json').userName;
 
-    const roomId = randomUUID();
-    const userId = randomUUID();
+    const { userId, roomId, userExpiresAt } = await createRoomAndUser(userName);
 
-    const command = new PutCommand({
-      TableName: USERS_TABLE,
-      Item: {
-        userId,
-        name: userName,
-        roomId: roomId,
-        vote: 0,
-      },
-      ConditionExpression: 'attribute_not_exists(userId)',
-    });
-
-    await docClient.send(command);
-
-    const token = await sign(
-      {
-        sub: userId,
-      },
-      process.env.APP_JWT_SECRET_KEY,
-    );
+    const token = await createUserToken(userId, userExpiresAt.getTime());
 
     return c.json({
       accessToken: token,
@@ -61,29 +41,11 @@ roomRoute.post(
   ),
   async (c) => {
     const userName = c.req.valid('json').userName;
-    const roomId = c.req.valid('json').roomId;
+    const roomId = c.req.valid('json').roomId as UUID;
 
-    const userId = randomUUID();
+    const { userId, userExpiresAt } = await createUser(userName, roomId);
 
-    const command = new PutCommand({
-      TableName: USERS_TABLE,
-      Item: {
-        userId,
-        name: userName,
-        roomId: roomId,
-        vote: 0,
-      },
-      ConditionExpression: 'attribute_not_exists(userId)',
-    });
-
-    await docClient.send(command);
-
-    const token = await sign(
-      {
-        sub: userId,
-      },
-      process.env.APP_JWT_SECRET_KEY,
-    );
+    const token = await createUserToken(userId, userExpiresAt.getTime());
 
     return c.json({
       accessToken: token,
