@@ -31,7 +31,7 @@ describe('Sample test for Infra Stack', () => {
           account: env.CDK_DEFAULT_ACCOUNT,
         },
         tables: {
-          usersTable: databaseStack.usersTable,
+          pokerTable: databaseStack.pokerTable,
         },
         appJwtSecretKey: env.APP_JWT_SECRET_KEY,
       },

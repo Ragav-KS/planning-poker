@@ -49,7 +49,7 @@ const backendLambdaStack = new BackendLambdaStack(
     },
     appJwtSecretKey: env.APP_JWT_SECRET_KEY,
     tables: {
-      usersTable: databaseStack.usersTable,
+      pokerTable: databaseStack.pokerTable,
     },
   },
 );

@@ -16,7 +16,7 @@ import { resolve } from 'path';
 interface BackendLambdaStackProps extends StackProps {
   appJwtSecretKey: string;
   tables: {
-    usersTable: Table;
+    pokerTable: Table;
   };
 }
 
@@ -29,7 +29,7 @@ export class BackendLambdaStack extends Stack {
 
     const {
       appJwtSecretKey,
-      tables: { usersTable },
+      tables: { pokerTable },
     } = props;
 
     const placeholderCode = readFileSync(
@@ -65,6 +65,6 @@ export class BackendLambdaStack extends Stack {
       version: lambdaFn.latestVersion,
     });
 
-    usersTable.grantReadWriteData(this.lambdaExecutionRole);
+    pokerTable.grantReadWriteData(this.lambdaExecutionRole);
   }
 }
