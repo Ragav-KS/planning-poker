@@ -1,0 +1,13 @@
+{
+  "name": "@planning-poker/prettier-config",
+  "description": "Prettier base config",
+  "type": "module",
+  "main": "index.js",
+  "types": "index.d.ts",
+  "dependencies": {
+    "prettier-plugin-packagejson": "2.5.10"
+  },
+  "peerDependencies": {
+    "prettier": ">=3.0.0"
+  }
+}
